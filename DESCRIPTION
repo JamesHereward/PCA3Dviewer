@@ -1,17 +1,24 @@
 Package: PCA3Dviewer
 Title: Interactive 3D PCA Viewer for 'genind' Data
 Version: 0.1.0
-Authors@R:
+Authors@R: c(
     person("James", "Hereward",
            email = "j.hereward@uq.edu.au",
-           role = c("aut", "cre"))
+           role = c("aut", "cre"),
+           comment = c(ORCID = "0000-0002-6468-6342")),
+    person("Three.js Authors", role = c("ctb", "cph"),
+           comment = "bundled three.js library (inst/js/three.min.js)"),
+    person("James Hall", role = c("ctb", "cph"),
+           comment = "bundled jsPDF library (inst/js/jspdf.umd.min.js)"))
 Description: Runs a principal component analysis on a 'genind' object (from the
     'adegenet' package) and writes a single, self-contained HTML file with an
-    interactive 3D scatter plot rendered with three.js. The viewer supports
-    selectable principal-component axes, a clickable population legend filter, a
-    sample search box that highlights the matched sample with an arrow and
-    label, a dark/light mode toggle, adjustable point size and opacity,
-    switchable colour palettes, and PNG/PDF export.
+    interactive 3D scatter plot rendered with the bundled 'three.js' 'WebGL'
+    library. The viewer supports selectable principal-component axes, a
+    clickable population legend filter, a sample search box that highlights the
+    matched sample with an arrow and label, a dark/light mode toggle,
+    adjustable point size and opacity, switchable colour palettes, and image
+    export to 'PNG' and (via the bundled 'jsPDF' library) 'PDF'. The generated
+    file requires no internet access to view.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Imports:

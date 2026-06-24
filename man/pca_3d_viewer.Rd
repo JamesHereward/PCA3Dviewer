@@ -56,15 +56,20 @@ palettes, and PNG/PDF export. Right-clicking a point copies its sample ID to
 the clipboard.
 }
 \examples{
+\donttest{
+# Build a viewer from adegenet's bundled 'nancycats' genind dataset.
+data(nancycats, package = "adegenet")
+popmap <- data.frame(
+  id  = adegenet::indNames(nancycats),
+  pop = as.character(adegenet::pop(nancycats))
+)
+out <- pca_3d_viewer(nancycats, popmap,
+                     output = tempfile(fileext = ".html"),
+                     open   = FALSE)
+}
+
 \dontrun{
-library(PCA3Dviewer)
-
-# From in-memory objects
-gi  <- readRDS("my_genind.rds")
-pm  <- read.table("popmap.txt", header = TRUE)
-pca_3d_viewer(gi, pm, output = "pca.html")
-
-# Or straight from file paths
+# Typical use with your own data, opening the result in a browser:
 pca_3d_viewer("my_genind.rds", "popmap.txt")
 }
 

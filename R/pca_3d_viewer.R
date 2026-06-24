@@ -33,15 +33,20 @@
 #' @return (Invisibly) the normalised path to the written HTML file.
 #'
 #' @examples
+#' \donttest{
+#' # Build a viewer from adegenet's bundled 'nancycats' genind dataset.
+#' data(nancycats, package = "adegenet")
+#' popmap <- data.frame(
+#'   id  = adegenet::indNames(nancycats),
+#'   pop = as.character(adegenet::pop(nancycats))
+#' )
+#' out <- pca_3d_viewer(nancycats, popmap,
+#'                      output = tempfile(fileext = ".html"),
+#'                      open   = FALSE)
+#' }
+#'
 #' \dontrun{
-#' library(PCA3Dviewer)
-#'
-#' # From in-memory objects
-#' gi  <- readRDS("my_genind.rds")
-#' pm  <- read.table("popmap.txt", header = TRUE)
-#' pca_3d_viewer(gi, pm, output = "pca.html")
-#'
-#' # Or straight from file paths
+#' # Typical use with your own data, opening the result in a browser:
 #' pca_3d_viewer("my_genind.rds", "popmap.txt")
 #' }
 #'
@@ -155,9 +160,18 @@ pca_3d_viewer <- function(x, popmap,
 
 
 ## Internal: returns the self-contained HTML as a character vector.
-## The five data lines are injected; everything else is the static viewer.
+## The five data lines are injected and the three.js / jsPDF libraries are
+## inlined from inst/js so the output needs no internet access; everything
+## else is the static viewer.
 .viewer_html <- function(points_json, legend_json, varpct_json,
                          pops_json, defpal_json) {
+  read_js <- function(f) {
+    p <- system.file("js", f, package = "PCA3Dviewer")
+    if (!nzchar(p)) stop("Bundled JavaScript not found: ", f, call. = FALSE)
+    readLines(p, warn = FALSE, encoding = "UTF-8")
+  }
+  js_three <- read_js("three.min.js")
+  js_jspdf <- read_js("jspdf.umd.min.js")
   c(
   "<!DOCTYPE html>",
   "<html><head><meta charset='utf-8'>",
@@ -254,8 +268,8 @@ pca_3d_viewer <- function(x, popmap,
   "    <div id='clearsearch' class='tbtn'>&#x2715;</div>",
   "  </div>",
   "</div>",
-  "<script src='https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js'></script>",
-  "<script src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'></script>",
+  "<script>", js_three, "</script>",
+  "<script>", js_jspdf, "</script>",
   "<script>",
   paste0("var PTS    = ", points_json, ";"),
   paste0("var LEGEND = ", legend_json, ";"),

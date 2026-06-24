@@ -1,5 +1,9 @@
 # PCA3Dviewer
 
+<!-- badges: start -->
+[![R-CMD-check](https://github.com/JamesHereward/PCA3Dviewer/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/JamesHereward/PCA3Dviewer/actions/workflows/R-CMD-check.yaml)
+<!-- badges: end -->
+
 Interactive **3D PCA viewer** for genetic data. `PCA3Dviewer` runs a principal
 component analysis on a [`genind`](https://adegenet.r-forge.r-project.org/)
 object (from **adegenet**) and writes a single, self-contained HTML file with an

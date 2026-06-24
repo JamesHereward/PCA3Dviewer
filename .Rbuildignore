@@ -2,4 +2,6 @@
 ^\.Rproj\.user$
 ^LICENSE\.md$
 ^README\.md$
+^cran-comments\.md$
 ^\.github$
+^\.git$
