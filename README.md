@@ -8,8 +8,9 @@ Interactive **3D PCA viewer** for genetic data. `PCA3Dviewer` runs a principal
 component analysis on a [`genind`](https://adegenet.r-forge.r-project.org/)
 object (from **adegenet**) and writes a single, self-contained HTML file with an
 interactive 3D scatter plot rendered with [three.js](https://threejs.org/).
-No server, no internet at view time beyond the two CDN script tags — just open
-the file in a browser.
+The three.js and jsPDF libraries are bundled and inlined, so the file is fully
+self-contained — no server and no internet needed to view it; just open it in a
+browser.
 
 ## Features
 
