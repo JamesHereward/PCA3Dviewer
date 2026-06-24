@@ -56,7 +56,7 @@ each individual to a population. It must contain the columns `id` and `pop`:
 ```
 id              pop
 Sample_001      Darwin_NT
-Sample_002      Keep_River_NP_NT
+Sample_002      Cairns_QLD
 ...
 ```
 
