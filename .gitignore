@@ -1,0 +1,10 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+*.Rproj
+3D_PCA_viewer.html
+*.html
+.httr-oauth
+.DS_Store
+.quarto
