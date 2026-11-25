@@ -1,3 +1,12 @@
+# PCA3Dviewer (development version)
+
+* `palette` can now be a named vector, matched to populations by name instead
+  of by order of appearance. Populations without a name get built-in colours,
+  with a warning.
+* New `fixed_colours` argument: a named vector of colours for populations that
+  keep the same colour under every palette in the viewer's palette switcher
+  (e.g. a grey "unknown" group). Accepts R colour names as well as hex codes.
+
 # PCA3Dviewer 0.1.0
 
 * Initial release.

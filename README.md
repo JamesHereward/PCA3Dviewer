@@ -72,8 +72,20 @@ Sample_002      Cairns_QLD
 | `output`  | Output HTML path (default `"3D_PCA_viewer.html"`).                           |
 | `n_pc`    | Number of principal components to compute / make selectable (default `10`). |
 | `scale`   | Scale variables to unit variance in the PCA (default `FALSE`).               |
-| `palette` | Optional vector of hex colours to use as the default palette.                |
+| `palette` | Optional vector of hex colours for the default palette; if named, matched to populations by name. |
+| `fixed_colours` | Optional named vector of colours that stay the same under every palette (e.g. a grey background group). |
 | `open`    | Open the result in a browser (default `interactive()`).                      |
+
+### Colours by name, with a grey background group
+
+```r
+pca_3d_viewer(gi, pm,
+              palette       = c(chinense = "#CC3336", orientale = "#2572EB"),
+              fixed_colours = c(unknown = "grey70"))
+```
+
+`unknown` stays grey whichever palette is chosen in the viewer; the other
+palettes are spread over the remaining populations.
 
 ## License
 

@@ -11,6 +11,7 @@ pca_3d_viewer(
   n_pc = 10,
   scale = FALSE,
   palette = NULL,
+  fixed_colours = NULL,
   open = interactive()
 )
 }
@@ -33,10 +34,20 @@ the viewer. Capped at the maximum supported by the data.}
 variables are scaled to unit variance. Default \code{FALSE}.}
 
 \item{palette}{Optional character vector of hex colours used as the
-\dQuote{Default} palette (one per population, recycled if shorter than the
-number of populations). If \code{NULL} (default) a curated 12-colour palette
-is used for up to 12 populations, otherwise evenly-spaced ggplot-style hues
-are generated so no colour repeats.}
+\dQuote{Default} palette. If it is \emph{named}, colours are matched to
+populations by name (e.g. \code{c(north = "#CC3336", south = "#2572EB")});
+populations not named get colours from the built-in palette, with a
+warning. If unnamed, colours are used in order of first appearance of each
+population in the \code{genind} (recycled if shorter). If \code{NULL}
+(default) a curated 12-colour palette is used for up to 12 populations,
+otherwise evenly-spaced ggplot-style hues are generated so no colour
+repeats.}
+
+\item{fixed_colours}{Optional \emph{named} character vector of hex colours
+for populations that keep the same colour under every palette in the
+viewer's palette switcher, e.g. \code{c(unknown = "grey70")} for a
+background group. These populations are left out when the other palettes
+are assigned. Any R colour name or hex code is accepted.}
 
 \item{open}{Logical; if \code{TRUE} the written HTML file is opened in the
 default browser via \code{utils::browseURL()}. Defaults to

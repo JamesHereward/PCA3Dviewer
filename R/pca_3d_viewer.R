@@ -22,10 +22,19 @@
 #' @param scale Logical; passed to \code{ade4::dudi.pca()}. If \code{TRUE},
 #'   variables are scaled to unit variance. Default \code{FALSE}.
 #' @param palette Optional character vector of hex colours used as the
-#'   \dQuote{Default} palette (one per population, recycled if shorter than the
-#'   number of populations). If \code{NULL} (default) a curated 12-colour
-#'   palette is used for up to 12 populations, otherwise evenly-spaced
-#'   ggplot-style hues are generated so no colour repeats.
+#'   \dQuote{Default} palette. If it is \emph{named}, colours are matched to
+#'   populations by name (e.g. \code{c(north = "#CC3336", south = "#2572EB")});
+#'   populations not named get colours from the built-in palette, with a
+#'   warning. If unnamed, colours are used in order of first appearance of each
+#'   population in the \code{genind} (recycled if shorter). If \code{NULL}
+#'   (default) a curated 12-colour palette is used for up to 12 populations,
+#'   otherwise evenly-spaced ggplot-style hues are generated so no colour
+#'   repeats.
+#' @param fixed_colours Optional \emph{named} character vector of hex colours
+#'   for populations that keep the same colour under every palette in the
+#'   viewer's palette switcher, e.g. \code{c(unknown = "grey70")} for a
+#'   background group. These populations are left out when the other palettes
+#'   are assigned. Any R colour name or hex code is accepted.
 #' @param open Logical; if \code{TRUE} the written HTML file is opened in the
 #'   default browser via \code{utils::browseURL()}. Defaults to
 #'   \code{interactive()}.
@@ -50,7 +59,7 @@
 #' pca_3d_viewer("my_genind.rds", "popmap.txt")
 #' }
 #'
-#' @importFrom grDevices hcl
+#' @importFrom grDevices hcl col2rgb rgb
 #' @importFrom utils read.table browseURL
 #' @export
 pca_3d_viewer <- function(x, popmap,
@@ -58,6 +67,7 @@ pca_3d_viewer <- function(x, popmap,
                           n_pc   = 10,
                           scale  = FALSE,
                           palette = NULL,
+                          fixed_colours = NULL,
                           open   = interactive()) {
 
   ## ---- Resolve the genind object ----
@@ -105,25 +115,40 @@ pca_3d_viewer <- function(x, popmap,
 
   ## ---- Colour palette ----
   populations <- unique(scores$pop)
-  n_pops      <- length(populations)
+
+  # fixed colours: same under every palette, excluded from palette assignment
+  fixed <- character(0)
+  if (!is.null(fixed_colours)) {
+    if (is.null(names(fixed_colours)) || any(!nzchar(names(fixed_colours)))) {
+      stop("`fixed_colours` must be a named vector, e.g. c(unknown = \"grey70\").",
+           call. = FALSE)
+    }
+    unused <- setdiff(names(fixed_colours), populations)
+    if (length(unused)) {
+      warning("`fixed_colours` names not found in the populations: ",
+              paste(unused, collapse = ", "), call. = FALSE)
+    }
+    fixed <- .as_hex(fixed_colours[names(fixed_colours) %in% populations])
+  }
+  free <- setdiff(populations, names(fixed))
+
   if (is.null(palette)) {
-    palette_base <- c(
-      "#5E4FBE", "#1D9E75", "#D85A30", "#D4537E",
-      "#378ADD", "#639922", "#BA7517", "#E24B4A",
-      "#888780", "#7BCCC4", "#F768A1", "#41B6C4"
-    )
-    if (n_pops <= length(palette_base)) {
-      pal <- palette_base[seq_len(n_pops)]
-    } else {
-      hues <- seq(15, 375, length.out = n_pops + 1)[seq_len(n_pops)]
-      pal  <- grDevices::hcl(h = hues, c = 100, l = 65)
+    pal <- .default_palette(length(free))
+  } else if (!is.null(names(palette))) {
+    pal  <- palette[free]
+    miss <- free[is.na(pal)]
+    if (length(miss)) {
+      warning("No colour in `palette` for: ", paste(miss, collapse = ", "),
+              "; using the built-in palette for these.", call. = FALSE)
+      pal[is.na(pal)] <- .default_palette(length(miss))
     }
   } else {
-    pal <- rep(palette, length.out = n_pops)
+    pal <- rep(palette, length.out = length(free))
   }
-  colour_map        <- pal
-  names(colour_map) <- populations
-  scores$colour     <- colour_map[scores$pop]
+  pal <- unname(pal); names(pal) <- free
+  pal <- .as_hex(pal)
+  colour_map    <- c(pal, fixed)[populations]
+  scores$colour <- colour_map[scores$pop]
 
   ## ---- JSON payloads ----
   pc_cols   <- grep("^PC", colnames(scores), value = TRUE)
@@ -144,12 +169,14 @@ pca_3d_viewer <- function(x, popmap,
   pops_json   <- paste0("[", paste(sprintf('"%s"', populations), collapse = ","), "]")
   defpal_json <- paste0("[", paste(sprintf('"%s"', colour_map[populations]),
                                    collapse = ","), "]")
+  fixed_json  <- paste0("{", paste(sprintf('"%s":"%s"', names(fixed), fixed),
+                                   collapse = ","), "}")
   varpct_json <- paste0("[", paste(sprintf("%.1f", var_pct[seq_len(n_pc_out)]),
                                    collapse = ","), "]")
 
   ## ---- Assemble and write the HTML ----
   html_lines <- .viewer_html(points_json, legend_json, varpct_json,
-                             pops_json, defpal_json)
+                             pops_json, defpal_json, fixed_json)
   writeLines(html_lines, output)
   if (isTRUE(open)) {
     try(utils::browseURL(output), silent = TRUE)
@@ -159,12 +186,35 @@ pca_3d_viewer <- function(x, popmap,
 }
 
 
+## Internal: the built-in palette for n populations (curated colours for up to
+## 12, otherwise evenly spaced hues so no colour repeats).
+.default_palette <- function(n) {
+  base <- c(
+    "#5E4FBE", "#1D9E75", "#D85A30", "#D4537E",
+    "#378ADD", "#639922", "#BA7517", "#E24B4A",
+    "#888780", "#7BCCC4", "#F768A1", "#41B6C4"
+  )
+  if (n <= length(base)) return(base[seq_len(n)])
+  hues <- seq(15, 375, length.out = n + 1)[seq_len(n)]
+  grDevices::hcl(h = hues, c = 100, l = 65)
+}
+
+## Internal: any R colour (name or hex) to "#RRGGBB", keeping names.
+.as_hex <- function(cols) {
+  if (!length(cols)) return(cols)
+  m   <- grDevices::col2rgb(cols)
+  out <- grDevices::rgb(m[1, ], m[2, ], m[3, ], maxColorValue = 255)
+  names(out) <- names(cols)
+  out
+}
+
+
 ## Internal: returns the self-contained HTML as a character vector.
-## The five data lines are injected and the three.js / jsPDF libraries are
+## The six data lines are injected and the three.js / jsPDF libraries are
 ## inlined from inst/js so the output needs no internet access; everything
 ## else is the static viewer.
 .viewer_html <- function(points_json, legend_json, varpct_json,
-                         pops_json, defpal_json) {
+                         pops_json, defpal_json, fixed_json = "{}") {
   read_js <- function(f) {
     p <- system.file("js", f, package = "PCA3Dviewer")
     if (!nzchar(p)) stop("Bundled JavaScript not found: ", f, call. = FALSE)
@@ -276,6 +326,8 @@ pca_3d_viewer <- function(x, popmap,
   paste0("var VARPCT = ", varpct_json, ";"),
   paste0("var POPS   = ", pops_json, ";"),
   paste0("var DEFPAL = ", defpal_json, ";"),
+  paste0("var FIXED  = ", fixed_json, ";"),
+  "var FREE   = POPS.filter(function(p) { return !(p in FIXED); });",
   "var AXIDX = {x:0, y:1, z:2};",
   "",
   "var canvas = document.getElementById('c');",
@@ -499,8 +551,12 @@ pca_3d_viewer <- function(x, popmap,
   "  return rgbToHex([a[0]+(b[0]-a[0])*f, a[1]+(b[1]-a[1])*f, a[2]+(b[2]-a[2])*f]);",
   "}",
   "function colourHexFor(pop) {",
-  "  var i = POPS.indexOf(pop); if (i < 0) i = 0;",
-  "  var n = POPS.length;",
+  "  // fixed populations keep their colour under every palette",
+  "  if (pop in FIXED) return FIXED[pop];",
+  "  if (curPal === 'Default') { var d = POPS.indexOf(pop); return DEFPAL[d < 0 ? 0 : d]; }",
+  "  // other palettes are spread over the non-fixed populations only",
+  "  var i = FREE.indexOf(pop); if (i < 0) i = 0;",
+  "  var n = FREE.length;",
   "  var arr = PALETTES[curPal] || DEFPAL;",
   "  // Few enough populations: use the exact palette colours.",
   "  // More populations than anchors: interpolate so no colour repeats.",
