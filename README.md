@@ -87,6 +87,22 @@ pca_3d_viewer(gi, pm,
 `unknown` stays grey whichever palette is chosen in the viewer; the other
 palettes are spread over the remaining populations.
 
+### From a PCAngsd covariance matrix
+
+For low-coverage or museum samples, PCAngsd runs the PCA from genotype
+likelihoods instead of called genotypes. `pcangsd_3d_viewer()` builds the same
+viewer from its covariance matrix. PCAngsd does not store sample names, so pass
+the IDs in the order of the Beagle file it was given:
+
+```r
+pcangsd_3d_viewer("pcangsd.cov", "samples.txt", "popmap.txt",
+                  output = "pcangsd_3D.html")
+```
+
+The PCs are the eigenvectors of the covariance matrix, and each PC's % variance
+is its eigenvalue over the sum of all eigenvalues. `popmap` is optional here;
+without it every sample is in one group.
+
 ## License
 
 MIT © James Hereward

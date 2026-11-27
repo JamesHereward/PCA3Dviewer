@@ -83,7 +83,7 @@ pca_3d_viewer <- function(x, popmap,
   ## ---- Resolve the popmap ----
   if (is.character(popmap)) {
     if (!file.exists(popmap)) stop("File not found: ", popmap, call. = FALSE)
-    popmap <- utils::read.table(popmap, header = TRUE, stringsAsFactors = FALSE)
+    popmap <- .read_popmap(popmap)
   }
   popmap <- as.data.frame(popmap, stringsAsFactors = FALSE)
   if (!all(c("id", "pop") %in% names(popmap))) {
@@ -113,6 +113,16 @@ pca_3d_viewer <- function(x, popmap,
   scores$id        <- ind
   scores$pop       <- as.character(adegenet::pop(x))
 
+  .build_viewer(scores, var_pct, output = output, palette = palette,
+                fixed_colours = fixed_colours, open = open)
+}
+
+
+## Internal: shared by pca_3d_viewer() and pcangsd_3d_viewer(). `scores` is a
+## data frame with columns PC1..PCn, id and pop; `var_pct` the % variance
+## explained by each PC. Assigns colours, builds the JSON and writes the HTML.
+.build_viewer <- function(scores, var_pct, output, palette = NULL,
+                          fixed_colours = NULL, open = interactive()) {
   ## ---- Colour palette ----
   populations <- unique(scores$pop)
 
@@ -777,4 +787,14 @@ pca_3d_viewer <- function(x, popmap,
   "</script>",
   "</body></html>"
   )
+}
+
+
+## Internal: read a popmap file. Tab-delimited files are read on tabs, so
+## population names may contain spaces; otherwise any whitespace separates.
+.read_popmap <- function(path) {
+  first <- readLines(path, n = 1L, warn = FALSE)
+  sep   <- if (grepl("\t", first, fixed = TRUE)) "\t" else ""
+  utils::read.table(path, header = TRUE, sep = sep, stringsAsFactors = FALSE,
+                    quote = "\"", comment.char = "")
 }

@@ -1,5 +1,8 @@
 # PCA3Dviewer (development version)
 
+* New `pcangsd_3d_viewer()`: builds the same viewer from a PCAngsd covariance
+  matrix (`.cov`) and a list of sample IDs, so PCAs from genotype likelihoods
+  (low-coverage or museum samples) can be viewed without a `genind` object.
 * `palette` can now be a named vector, matched to populations by name instead
   of by order of appearance. Populations without a name get built-in colours,
   with a warning.
